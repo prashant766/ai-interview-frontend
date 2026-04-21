@@ -699,6 +699,13 @@ function endSession() {
   location.reload();
 }
 
+/* THEME */
+function toggleTheme() {
+  document.body.classList.toggle('light');
+  const btn = document.getElementById('themeBtn');
+  btn.textContent = document.body.classList.contains('light') ? '🌙 Dark Mode' : '☀️ Light Mode';
+}
+
 /* INIT */
 document.addEventListener('DOMContentLoaded', renderGrid);
 </script>
