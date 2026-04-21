@@ -598,7 +598,7 @@ async function startInterview(langId) {
 /* LOAD FIRST QUESTION */
 async function loadQuestion() {
   const qContent = document.getElementById('qContent');
-  qContent.innerHTML = "Loading question...";
+qContent.innerHTML = `<div class="q-loading"><div class="spinner"></div> Server is waking up, please wait up to 60 seconds...</div>`;
 
   try {
     const res = await fetch(API_URL, {
