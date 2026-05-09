@@ -549,6 +549,7 @@
 
 <script>
 const API_URL = "https://ai-interview-backend-h42h.onrender.com/api/interview/start";
+
 const LANGUAGES = [
   { id:'java', name:'Java', icon:'☕' },
   { id:'html', name:'HTML', icon:'🌐' },
@@ -564,12 +565,14 @@ let state = {
   lang: null,
   currentQ: 1,
   totalQ: 10,
+  currentQuestion: "",
   nextQuestion: ""
 };
 
 /* INIT GRID */
 function renderGrid() {
   const grid = document.getElementById('langGrid');
+
   grid.innerHTML = LANGUAGES.map(l => `
     <div class="lang-card" onclick="startInterview('${l.id}')">
       <div class="lang-icon">${l.icon}</div>
@@ -580,9 +583,13 @@ function renderGrid() {
 
 /* START */
 async function startInterview(langId) {
+
   const lang = LANGUAGES.find(l => l.id === langId);
+
   state.lang = lang;
   state.currentQ = 1;
+  state.currentQuestion = "";
+  state.nextQuestion = "";
 
   document.getElementById('home-screen').style.display = 'none';
   document.getElementById('interview-screen').style.display = 'block';
@@ -597,31 +604,52 @@ async function startInterview(langId) {
 
 /* LOAD FIRST QUESTION */
 async function loadQuestion() {
+
   const qContent = document.getElementById('qContent');
-qContent.innerHTML = `<div class="q-loading"><div class="spinner"></div> Server is waking up, please wait up to 60 seconds...</div>`;
+
+  qContent.innerHTML = `
+    <div class="q-loading">
+      <div class="spinner"></div>
+      Server is waking up, please wait up to 60 seconds...
+    </div>
+  `;
 
   try {
+
     const res = await fetch(API_URL, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json"
+      },
+
       body: JSON.stringify({
         role: state.lang.name,
-        answer: ""
+        answer: "",
+        questionNumber: state.currentQ
       })
     });
 
     const data = await res.json();
 
-    qContent.innerHTML = `<div class="q-text">${data.question}</div>`;
+    qContent.innerHTML = `
+      <div class="q-text">${data.question}</div>
+    `;
+
+    state.currentQuestion = data.question;
 
   } catch (e) {
-    qContent.innerHTML = "Error loading question";
+
+    qContent.innerHTML = `
+      <div class="q-text">Error loading question</div>
+    `;
   }
 }
 
 /* SUBMIT ANSWER */
 async function submitAnswer() {
+
   const answerBox = document.getElementById('answerBox');
+
   const answer = answerBox.value.trim();
 
   if (!answer) {
@@ -630,36 +658,56 @@ async function submitAnswer() {
   }
 
   const feedbackArea = document.getElementById('feedbackArea');
-  feedbackArea.innerHTML = "Checking answer...";
+
+  feedbackArea.innerHTML = `
+    <div class="feedback-loading">
+      <div class="spinner"></div>
+      Checking answer...
+    </div>
+  `;
 
   try {
+
     const res = await fetch(API_URL, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+
+      headers: {
+        "Content-Type": "application/json"
+      },
+
       body: JSON.stringify({
         role: state.lang.name,
-        answer: answer
+        question: state.currentQuestion,
+        answer: answer,
+        questionNumber: state.currentQ
       })
     });
 
     const data = await res.json();
 
-    // SHOW FEEDBACK ONLY
+    // SHOW FEEDBACK
     showFeedback(data);
 
-    // STORE NEXT QUESTION (DON'T SHOW YET)
+    // STORE NEXT QUESTION
     state.nextQuestion = data.question;
 
     document.getElementById('nextBtn').disabled = false;
+
     answerBox.value = "";
 
   } catch (e) {
-    feedbackArea.innerHTML = "Error getting feedback";
+
+    feedbackArea.innerHTML = `
+      <div class="feedback-body">
+        Error getting feedback
+      </div>
+    `;
   }
 }
 
 /* SHOW FEEDBACK */
 function showFeedback(data) {
+
   const feedbackArea = document.getElementById('feedbackArea');
 
   feedbackArea.innerHTML = `
@@ -667,30 +715,46 @@ function showFeedback(data) {
       <div class="feedback-header">
         <strong>Score: ${data.score}/10</strong>
       </div>
-      <div class="feedback-body">${data.feedback}</div>
+
+      <div class="feedback-body">
+        ${data.feedback}
+      </div>
     </div>
   `;
 }
 
 /* NEXT QUESTION */
 function nextQuestion() {
+
+  if (state.currentQ >= state.totalQ) {
+    alert("Interview completed");
+    return;
+  }
+
   if (!state.nextQuestion) return;
 
   state.currentQ++;
+
+  state.currentQuestion = state.nextQuestion;
+
   updateProgress();
 
-  document.getElementById('qContent').innerHTML =
-    `<div class="q-text">${state.nextQuestion}</div>`;
+  document.getElementById('qContent').innerHTML = `
+    <div class="q-text">${state.nextQuestion}</div>
+  `;
 
   document.getElementById('feedbackArea').innerHTML = "";
+
   document.getElementById('nextBtn').disabled = true;
 }
 
 /* UPDATE PROGRESS */
 function updateProgress() {
+
   document.getElementById('qNum').innerText = state.currentQ;
 
   const percent = (state.currentQ / state.totalQ) * 100;
+
   document.getElementById('progressBar').style.width = percent + "%";
 }
 
@@ -701,13 +765,20 @@ function endSession() {
 
 /* THEME */
 function toggleTheme() {
+
   document.body.classList.toggle('light');
+
   const btn = document.getElementById('themeBtn');
-  btn.textContent = document.body.classList.contains('light') ? '🌙 Dark Mode' : '☀️ Light Mode';
+
+  btn.textContent =
+    document.body.classList.contains('light')
+      ? '🌙 Dark Mode'
+      : '☀️ Light Mode';
 }
 
 /* INIT */
 document.addEventListener('DOMContentLoaded', renderGrid);
+
 </script>
 
 </body>
