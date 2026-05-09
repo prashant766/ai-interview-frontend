@@ -693,7 +693,6 @@ async function submitAnswer() {
 
     document.getElementById('nextBtn').disabled = false;
 
-    answerBox.value = "";
 
   } catch (e) {
 
@@ -746,6 +745,8 @@ function nextQuestion() {
   document.getElementById('feedbackArea').innerHTML = "";
 
   document.getElementById('nextBtn').disabled = true;
+
+  document.getElementById('answerBox').value = "";
 }
 
 /* UPDATE PROGRESS */
